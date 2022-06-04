@@ -1,0 +1,29 @@
+html *
+{
+   color: #000 !important;
+   font-family: Arial !important;
+}
+
+button
+{
+    min-width: 100px;
+    margin: 5px;
+}
+
+.container
+{
+    padding: 1%;
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+.content
+{
+    padding: 5%;
+}
+
+.sensor
+{
+    border-style: groove;
+    margin: 5px;
+}

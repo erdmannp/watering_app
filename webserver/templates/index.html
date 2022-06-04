@@ -1,0 +1,67 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Watering Website</title>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+
+</head>
+<body>
+<div>
+<h1>Watering:</h1>
+Config: <br/>
+<form action="save_config" method="POST">
+{%for key, value in config.items() %}
+<label for=" {{ key }} "> {{ key }} </label> <input name="{{ key }}" id=" {{ key }} " type="text" value="{{ value }}"><br/>
+{%endfor%}
+<input type="submit" value="save">
+</form>
+
+</div>
+<div class="container">
+  <div class="content">
+    <div class="sensor">
+      sensor 1 <br/>
+      humidity: 1
+    </div>
+    <div class="sensor">
+      sensor 2 <br/>
+      humidity: 1
+    </div> 
+    <div class="sensor">
+      sensor 3 <br/>
+      humidity: 1
+    </div> 
+    <div class="sensor">
+      sensor 4 <br/>
+      humidity: 1
+    </div>
+    <div class="sensor">
+      sensor 5 <br/>
+      humidity: 1
+    </div>
+    <div class="sensor">
+      sensor 6 <br/>
+      humidity: {{data}}
+    </div>
+  </div>
+
+  <div class="content">
+    <button>Solenoid 1</button> <br/>
+    <button>Solenoid 2</button> <br/>
+    <button>Solenoid 3</button> <br/>
+    <button>Solenoid 4</button> <br/>
+    <button>Solenoid 5</button> <br/>
+    <button>Solenoid 6</button> <br/> 
+    <button>Solenoid 7</button> <br/>
+    <button>Solenoid 8</button> <br/>
+
+  </div>
+</div>   
+<body>
+</html>
