@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', (event) => {
-
     var dragSrcEl = null;
     
     function handleDragStart(e) {
@@ -51,7 +50,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
     
     
-    let items = document.querySelectorAll('.container .content');
+    let items = document.querySelectorAll('.container');
     items.forEach(function(item) {
       item.addEventListener('dragstart', handleDragStart, false);
       item.addEventListener('dragenter', handleDragEnter, false);

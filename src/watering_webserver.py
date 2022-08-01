@@ -1,13 +1,10 @@
-from re import I
-
-from cairo import STATUS_INVALID_DSC_COMMENT
 from flask import Flask, render_template, request, redirect
 from apscheduler.schedulers.background import BackgroundScheduler
 import pickle
 
 i = 0
-config = {}
 
+config = {}
 def load_config():
     global config
     try:
