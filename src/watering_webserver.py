@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect
-from apscheduler.schedulers.background import BackgroundScheduler
 import pickle
+from threading import Thread
+from time import sleep
+
 
 i = 0
 
@@ -18,11 +20,14 @@ def save_config():
     global config
     pickle.dump(config, open( "config.p", "wb" )) 
 
-def sensor():
+def worker():
     global i, config
-    i += 1
-    print("Test" + str(i))
-    print(config)
+
+    while True:
+        i += 1
+        print("Test" + str(i))
+        print(config)
+        sleep(60)
 
 app = Flask(__name__)
 
@@ -51,7 +56,7 @@ def save_config_web():
 if __name__ == "__main__":
     load_config()
 
-    sched = BackgroundScheduler(daemon=True)
-    sched.add_job(sensor,'interval',seconds=30)
-    sched.start()
+    t = Thread(target=worker)
+    t.run()
+
     app.run(debug=True, host="0.0.0.0")
