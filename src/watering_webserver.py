@@ -4,10 +4,8 @@ from threading import Thread
 from time import sleep, strftime
 import os
 import re
-#import gpiod
+import gpiod
 from datetime import datetime
-
-from zeroconf import current_time_millis
 
 
 
