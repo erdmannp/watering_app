@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 
 <html lang="en">
@@ -7,51 +5,50 @@
     <meta charset="utf-8" />
     <title>Watering Website</title>
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </head>
 <body>
 <div>
 <h1>Watering:</h1>
+Time: <code id="datetime"></code> <br/> 
 Config: <br/>
 <form action="save_config" method="POST">
 {%for key, value in config.items() %}
-<label for=" {{ key }} "> {{ key }} </label> <input name="{{ key }}" id=" {{ key }} " type="text" value="{{ value }}"><br/>
+  {%if 'hidden' not in key %}
+    <label for=" {{ key }} "> {{ key }} </label> <input name="{{ key }}" id=" {{ key }} " type="text" value="{{ value }}"><br/>
+  {%endif%}
 {%endfor%}
+
 <input type="submit" value="save">
 </form>
 
 </div>
 <div class="container">
   <div class="content">
-    <div class="sensor">
-      sensor 1 <br/>
-      humidity: 1
-    </div>
-    <div class="sensor">
-      sensor 2 <br/>
-      humidity: 1
-    </div> 
-    <div class="sensor">
-      sensor 3 <br/>
-      humidity: 1
-    </div> 
-    <div class="sensor">
-      sensor 4 <br/>
-      humidity: 1
-    </div>
-    <div class="sensor">
-      sensor 5 <br/>
-      humidity: 1
-    </div>
-    <div class="sensor">
-      sensor 6 <br/>
-      humidity: {{data}}
-    </div>
+    {%for sensor, value in sensors.items() %}
+      <div class="sensor">
+        {{ sensor }} <br/>
+        humidity: <code id="{{ sensor }}_humidity"> </code><br />
+        <form action="save_sensor" method="POST">
+          <label for={{ sensor }}> {{ sensor }} Watering Threshold </label> <input name="{{ sensor }}" id="{{ sensor }}" type="text" value=" {{config['hidden_sensor_thresholds'][sensor] }}"><br/>
+          
+          {%for relay_key, relay_value in relays.items() %}
+            <input type="checkbox" id="relays" name="{{ relay_key }}"
+              {%if sensor is in relay_value %} checked {%endif%}
+            >
+            <label for="relays">{{ relay_key }}</label>
+          {%endfor%}
+          <br />
+          <input type="submit" value="save">
+        </form>
+      </div>
+    {%endfor%}
   </div>
 
-  <div class="content">
+  <!--  <div class="content">
     <button draggable="true" class="box" >Solenoid 1</button> <br/>
     <button draggable="true" class="box">Solenoid 2</button> <br/>
     <button draggable="true" class="box">Solenoid 3</button> <br/>
@@ -62,6 +59,7 @@ Config: <br/>
     <button draggable="true" class="box"  >Solenoid 8</button> <br/>
 
   </div>
+-->
 </div>   
 <body>
 </html>

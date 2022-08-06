@@ -1,6 +1,31 @@
+$( document ).ready(function() {
+  function updateSensors() {
+    $.getJSON('/get_sensor_values/', function(response){
+      $("#sensor1_humidity").text(response.sensor1);
+      $("#sensor2_humidity").text(response.sensor2);
+      $("#sensor3_humidity").text(response.sensor3);
+      $("#sensor4_humidity").text(response.sensor4);
+      $("#sensor5_humidity").text(response.sensor5);
+      $("#sensor6_humidity").text(response.sensor6);
+      $("#datetime").text(response.datetime);
+      
+    });    
+  }
+
+  updateSensors();  
+  setInterval(updateSensors, 1000 * 10);
+});
+
+
 document.addEventListener('DOMContentLoaded', (event) => {
     var dragSrcEl = null;
     
+ 
+
+      
+
+
+
     function handleDragStart(e) {
       this.style.opacity = '0.4';
       
@@ -60,3 +85,4 @@ document.addEventListener('DOMContentLoaded', (event) => {
       item.addEventListener('dragend', handleDragEnd, false);
     });
   });
+  
