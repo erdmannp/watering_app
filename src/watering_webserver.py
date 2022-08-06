@@ -26,8 +26,7 @@ def ctrl_pump(enable, number):
     relays[number].set_value(1 if enable else 0)
 
 def _get_sensor_val(adc, sensor):
-    #return 'ads_get %s %s 2' %(adc, sensor)
-    return int(os.popen("echo 1000").read().replace('\n', ''    ))
+    return int(os.popen("ads_get %s %s 2' %(adc, sensor)").read().replace('\n', ''))
 
 def read_sensors():
     global sensors
@@ -142,7 +141,7 @@ def worker():
     
         read_sensors()
         water()
-        sleep(10)
+        sleep(config['Check_Interval'] * 60)
 
 
 
