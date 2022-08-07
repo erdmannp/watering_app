@@ -61,7 +61,7 @@ def initialize_gpios():
     for k, r in relays.items():
         try:
             r.request(gpiod_config)
-            r.set_value(0)
+            # r.set_value(0) # Stop testing all the relays, it is working. 
             sleep(0.1)
             r.set_value(1)
         except OSError as err:
