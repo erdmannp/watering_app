@@ -136,12 +136,13 @@ def water():
             if sensor_v > config['hidden_sensor_thresholds'][sensor_k]:
                 print ("Watering for: %s; %s > %s" %(sensor_k, sensor_v, config['hidden_sensor_thresholds'][sensor_k]))
                 for relay in get_relays_for_sensor(sensor_k):
-                    print("Enable %s" ,(relay))
+                    print("Enable %s" %(relay))
+                    print(type(relay), relay)
                     relays[relay].set_value(0)
                     pump.set_value(1)
-                    sleep(['Watering_Duration'] * 60)
+                    sleep(config['Watering_Duration'] * 60)
 
-                    print("Disable %s" ,(relay))
+                    print("Disable %s" %(relay))
                     relays[relay].set_value(1)
                     pump.set_value(0)
                     sleep(5) # sleep to prevent overheating from pump
