@@ -1,21 +1,18 @@
 from flask import Flask, render_template, request, redirect
 import pickle
 from threading import Thread
-from time import sleep, strftime
-import os
-import re
+from time import sleep
+from subprocess import run as sp_run
 import gpiod
 from datetime import datetime
-
+from shlex import split as sh_split
 
 
 app = Flask(__name__)
 
-integer_regex = re.compile("%d")
-
 i = 0
 config = {}
-
+stop_threads = False
 relays = {'relay1' : None, 'relay2' : None, 'relay3' : None, 'relay4' : None, 'relay5' : None, 'relay6' : None, 'relay7' : None, 'relay8' : None}
 sensors = {'sensor1' : 0, 'sensor2' : 0, 'sensor3' : 0,'sensor4' : 0,'sensor5' : 0,'sensor6' : 0}
 pump = None
@@ -24,18 +21,24 @@ def ctrl_pump(enable, number):
     relays[number].set_value(1 if enable else 0)
 
 def _get_sensor_val(adc, sensor):
-    return int(os.popen("ads_get %s %s 2' %(adc, sensor)").read().replace('\n', ''))
+    res = sp_run(sh_split("ads_get %s %s 2" %(adc, sensor)), capture_output=True).stdout
+    return int(res)
 
 def read_sensors():
-    global sensors
+    global sensors  
+    global stop_threads
 
-    sensors['sensor1'] = _get_sensor_val(1, 0)
-    sensors['sensor2'] = _get_sensor_val(1, 1)
-    sensors['sensor3'] = _get_sensor_val(1, 2)
-    sensors['sensor4'] = _get_sensor_val(1, 3)
-    sensors['sensor5'] = _get_sensor_val(2, 0)
-    sensors['sensor6'] = _get_sensor_val(2, 1)
-
+    while not stop_threads:
+        sensors['sensor1'] = _get_sensor_val(1, 0)
+        sensors['sensor2'] = _get_sensor_val(1, 1)
+        sensors['sensor3'] = _get_sensor_val(1, 2)
+        sensors['sensor4'] = _get_sensor_val(1, 3)
+        sensors['sensor5'] = _get_sensor_val(2, 0)
+        sensors['sensor6'] = _get_sensor_val(2, 1)
+        for i in range(5):
+            sleep(1)
+            if stop_threads:
+                break
 
 def initialize_gpios():
     global pump, relays
@@ -55,13 +58,23 @@ def initialize_gpios():
     gpiod_config.consumer = "Watering"
     gpiod_config.request_type = gpiod.line_request.DIRECTION_OUTPUT
 
-    for r in relays:
-        r.request(gpiod_config)
-        r.set_value(0)
-        sleep(0.1)
-        r.set_value(1)
-    pump.request(gpiod_config)
-    pump.set_value(0)
+    for k, r in relays.items():
+        try:
+            r.request(gpiod_config)
+            r.set_value(0)
+            sleep(0.1)
+            r.set_value(1)
+        except OSError as err:
+            print("OS error: {0}".format(err))
+            print("Error occurs in %s %s" %(k, r))
+
+    try:
+        pump.request(gpiod_config)
+        pump.set_value(0)
+    except OSError as err:
+        print("OS error: {0}".format(err))
+        print("Error occurs in pump relay")
+
 
 
 def load_config():
@@ -101,7 +114,9 @@ def save_config():
 def get_relays_for_sensor(sensor):
     ret = []
     for k, v in config["hidden_relays"].items():
+        print(k, v)
         for i in v:
+            print(i)
             if sensor == i:
                 ret.append(k)
     return ret
@@ -116,32 +131,33 @@ def water():
 
     if watering_date < now:
         print("Its time to water the plants")
-        for sensor_k, sensor_v in sensors:
-            print("Checking: %s %s", (sensor_k, sensor_v))
-            if sensor_v < config['hidden_sensor_thresholds'][sensor_k] - config["Hysteresis_Threshold"]:
-                print ("Watering for: %s; %s < %s", (sensor_k, sensor_v, config['hidden_sensor_thresholds'][sensor_k] - config["Hysteresis_Threshold"]))
+        for sensor_k, sensor_v in sensors.items():
+            print("Checking: %s %s" %(sensor_k, sensor_v))
+            if sensor_v > config['hidden_sensor_thresholds'][sensor_k]:
+                print ("Watering for: %s; %s > %s" %(sensor_k, sensor_v, config['hidden_sensor_thresholds'][sensor_k]))
                 for relay in get_relays_for_sensor(sensor_k):
                     print("Enable %s" ,(relay))
                     relays[relay].set_value(0)
                     pump.set_value(1)
-                    sleep(config['Watering_Duration'] * 60)
+                    sleep(['Watering_Duration'] * 60)
+
                     print("Disable %s" ,(relay))
                     relays[relay].set_value(1)
                     pump.set_value(0)
                     sleep(5) # sleep to prevent overheating from pump
+    else:
+        print("Its not the time to water the plants: %s %s" %(watering_date, now))
+
 def worker():
     global i, config
     initialize_gpios()
-    read_sensors()
 
-    while True:
-        i += 1
-    
-        read_sensors()
+    while not stop_threads:
         water()
-        sleep(config['Check_Interval'] * 60)
-
-
+        for i in range(config['Check_Interval'] * 60):
+            sleep(1)
+            if stop_threads:
+                break   
 
 @app.route('/get_sensor_values/')
 def get_sensor_values():
@@ -197,7 +213,10 @@ def save_config_web():
     
     for key, value in config.items():
         try:
-            config[key] = int(request.form.get(key))
+            if key == "Watering_Time":
+                config[key] = request.form.get(key)
+            else:
+                config[key] = int(request.form.get(key))
         except:
             pass
 
@@ -205,11 +224,21 @@ def save_config_web():
 
     return redirect('/')        
 
+def shutdown():
+    global stop_threads
+    
+    stop_threads = True
+    sensor_thread.join()
+    worker_thread.join()
+
 if __name__ == "__main__":
     load_config()
 
-    t = Thread(target=worker)
-    t.start()
+    worker_thread = Thread(target=worker)
+    worker_thread.start()
     
+    sensor_thread = Thread(target=read_sensors)
+    sensor_thread.start()
+
     app.run(debug=True, host="0.0.0.0", port=80)
-        
+    shutdown()
