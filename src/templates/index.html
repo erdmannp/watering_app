@@ -39,9 +39,16 @@ Config: <br/>
           {%for relay_key, relay_value in relays.items() %}
             <input type="checkbox" id="relays" name="{{ relay_key }}"
               {%if sensor is in relay_value %} checked {%endif%}
+              {%if sensor|string() == use_as_level|string() %} disabled {%endif%}
             >
             <label for="relays">{{ relay_key }}</label>
+
           {%endfor%}
+          <br/>
+          <input type="checkbox" id="useAsLevel" name="useAsLevel"
+          {%if sensor|string() == use_as_level|string() %} checked {%endif%}
+        >
+          <label for="useAsLevel">Use as Water tank level</label>
           <br />
           <input type="submit" value="save">
         </form>
